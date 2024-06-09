@@ -1,0 +1,62 @@
+# Fungsi yang akan dioptimalkan
+def objective_function(x):
+    return x**2 + 4 * np.sin(x)
+# Inisialisasi populasi
+def initialize_population(size, bounds):
+    return np.random.uniform(bounds[0], bounds[1], (size, 1))
+# Evaluasi populasi
+def evaluate_population(population):
+    return np.array([objective_function(ind[0]) for ind in population])
+# Seleksi (Roulette Wheel Selection)
+def select_parents(population, fitness):
+    fitness_shifted = fitness - np.min(fitness) + 1  # Menggeser fitness agar tidak ada yang negatif
+    total_fitness = np.sum(fitness_shifted)
+    selection_probs = fitness_shifted / total_fitness
+    selected_indices = np.random.choice(len(population), size=len(population), p=selection_probs)
+    return population[selected_indices]
+# Crossover (Simple Exchange Crossover)
+def crossover(parents, crossover_rate=0.7):
+    offspring = np.empty(parents.shape)
+    num_parents = parents.shape[0]
+    for i in range(0, num_parents - 1, 2):
+        if np.random.rand() < crossover_rate:
+            # Pertukaran sederhana antara dua gen
+            offspring[i] = parents[i+1]
+            offspring[i+1] = parents[i]
+        else:
+            offspring[i] = parents[i]
+            offspring[i+1] = parents[i+1]
+    if num_parents % 2 != 0:  # Jika jumlah parents ganjil, copy parent terakhir tanpa crossover
+        offspring[-1] = parents[-1]
+    return offspring
+# Mutasi
+def mutate(offspring, mutation_rate=0.1, bounds=(-10, 10)):
+    for i in range(offspring.shape[0]):
+        if np.random.rand() < mutation_rate:
+            offspring[i] = np.random.uniform(bounds[0], bounds[1], 1)
+    return offspring
+# Algoritma Genetika
+def genetic_algorithm(bounds, population_size, generations):
+    population = initialize_population(population_size, bounds)
+    best_outputs = []
+    for generation in range(generations):
+        fitness = evaluate_population(population)
+        best_outputs.append(np.max(fitness))
+        parents = select_parents(population, fitness)
+        offspring = crossover(parents)
+        offspring = mutate(offspring, bounds=bounds)
+        population = offspring
+        print(f"Generation {generation}: Best Fitness = {best_outputs[-1]}")
+    return best_outputs
+# Parameter Algoritma Genetika
+bounds = (-10, 10)
+population_size = 20
+generations = 100
+# Menjalankan Algoritma Genetika
+best_outputs = genetic_algorithm(bounds, population_size, generations)
+# Visualisasi hasil
+plt.plot(best_outputs)
+plt.xlabel('Generasi')
+plt.ylabel('Nilai Fitness Terbaik')
+plt.title('Konvergensi Algoritma Genetika')
+plt.show()
